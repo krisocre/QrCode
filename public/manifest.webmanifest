@@ -1,0 +1,12 @@
+{
+  "name": "Luxe Hair Studio Loyalty",
+  "short_name": "Luxe",
+  "description": "Offline-ready customer loyalty wallet and staff scanner",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F9F8F6",
+  "theme_color": "#C23F73",
+  "icons": [
+    { "src": "/mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
