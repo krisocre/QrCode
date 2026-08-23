@@ -98,6 +98,7 @@ test('production customer entrypoint is wallet-first and contains no demo creden
   await mockPublicConfiguration(page)
   await page.goto('/')
   await expect(page.getByRole('heading', { name: /Your salon card/ })).toBeVisible()
+  await expect(page.getByText('Luxe Hair Studio 2')).toBeVisible()
   await expect(page.getByLabel('Mobile number')).toBeVisible()
   await expect(page.getByText(/Demo OTP|Try 2468|Demo member/)).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Owner login' })).toHaveCount(0)
