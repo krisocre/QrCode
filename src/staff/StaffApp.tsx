@@ -156,10 +156,10 @@ export function StaffApp() {
       </header>
 
       <div className="staff-content">
-        {tab === 'scan' && <ScannerView paused={Boolean(customer)} onScan={handleRawScan} onDemoScan={() => {
+        {tab === 'scan' && <ScannerView paused={Boolean(customer)} onScan={handleRawScan} fallbackAction={{ label: 'Load demo scan', onClick: () => {
           const demoCustomer = database.profiles.find((profile) => profile.role === 'customer')
           if (demoCustomer) handleRawScan(loyaltyStore.customerPayload(demoCustomer.id))
-        }} />}
+        } }} />}
         {tab === 'search' && <ManualSearch onSelect={selectManual} />}
         {tab === 'audit' && <AuditLog staffId={staff.id} />}
       </div>

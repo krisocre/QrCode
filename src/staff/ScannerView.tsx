@@ -5,10 +5,10 @@ import { Camera, CameraOff, FlipHorizontal2, Flashlight, FlashlightOff, ScanLine
 interface ScannerViewProps {
   paused: boolean
   onScan: (value: string) => void
-  onDemoScan: () => void
+  fallbackAction?: { label: string; onClick: () => void }
 }
 
-export function ScannerView({ paused, onScan, onDemoScan }: ScannerViewProps) {
+export function ScannerView({ paused, onScan, fallbackAction }: ScannerViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const lastValueRef = useRef({ value: '', at: 0 })
   const pausedRef = useRef(paused)
@@ -96,9 +96,9 @@ export function ScannerView({ paused, onScan, onDemoScan }: ScannerViewProps) {
           <FlipHorizontal2 size={21} />
         </button>
       </div>
-      {cameraError && (
-        <button className="demo-scan-button" type="button" onClick={onDemoScan}>
-          <Camera size={17} /> Load demo scan
+      {cameraError && fallbackAction && (
+        <button className="camera-fallback-button" type="button" onClick={fallbackAction.onClick}>
+          <Camera size={17} /> {fallbackAction.label}
         </button>
       )}
     </section>

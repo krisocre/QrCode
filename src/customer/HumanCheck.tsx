@@ -28,6 +28,7 @@ export function HumanCheck({ onToken }: HumanCheckProps) {
       widgetId = window.turnstile.render(containerRef.current, {
         sitekey: siteKey,
         theme: 'light',
+        action: 'otp_request',
         callback: (token: string) => { setVerified(true); onToken(token) },
         'expired-callback': () => { setVerified(false); onToken('') },
         'error-callback': () => { setVerified(false); onToken('') },

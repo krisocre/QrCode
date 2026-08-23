@@ -1,37 +1,62 @@
 # Luxe Hair Studio Loyalty
 
-A multi-tenant, offline-ready loyalty PWA with customer, cashier, and owner interfaces.
+A multi-tenant, wallet-first loyalty system for hair salons. Customers enroll by phone and add a rotating loyalty pass to Google Wallet. Cashiers scan that pass from a mobile camera, and owners manage rewards, staff, devices, customers, and program settings from `/admin`.
 
-## Run locally
+## Applications
+
+- Customer enrollment and membership: `/`
+- Cashier scanner and transaction log: `/staff`
+- Phone-friendly owner portal: `/admin`
+- Tenant selection: `?tenant=luxe-hair-studio`
+
+Admin controls are never rendered in the customer app. The only customer-facing admin entry appears after sign-out and leads to the protected `/admin` route.
+
+## Architecture
+
+- React 18 and Vite PWA frontend
+- Vercel Functions under `api/`
+- Supabase Auth, Postgres, RLS, Realtime, and atomic loyalty RPCs
+- Cloudflare Turnstile before SMS OTP requests
+- Twilio SMS through the Supabase Auth provider
+- Google Wallet LoyaltyClass/LoyaltyObject issuance with 60-second rotating QR values
+- Signed, earn-only offline recovery for a visit validated before a connection drop
+- Server-side idempotency, 30-second duplicate blocking, 60-second undo, immutable ledger/audit rows, and Wallet sync outbox
+
+## Local demo
+
+The normal Vite development server defaults to isolated demo data and needs no provider keys:
 
 ```powershell
 npm install
 npm run dev
 ```
 
-- Customer wallet: `http://localhost:5173/`
-- Staff portal: `http://localhost:5173/staff`
-- Owner portal: `http://localhost:5173/admin`
-- Returning customer: `(416) 555-0182`
-- Demo OTP: `2468`
-- Demo staff PIN: `4826`
-- Demo owner PIN: `7391`
+Open `http://localhost:5173`. Demo credentials remain local-only and production builds fail closed unless explicitly configured.
 
-Tenant selection comes from `?tenant=<slug>`. The default tenant is `juniper`; the seeded `northline` tenant demonstrates isolated point-based data at `/admin?tenant=northline` with owner PIN `8642`.
+## Production setup
 
-The demo stores tenant-scoped profiles, rewards, rotating barcodes, redemptions, OTP request counters, and immutable transactions locally. `BroadcastChannel` pushes committed updates to open customer, staff, and owner tabs. Customer sessions are encrypted with AES-GCM before persistence.
+1. Copy the variable names from `.env.example` into ignored `.env.local` and provide the real environment values.
+2. Apply `database/migrations/*.sql` in lexical order to a clean Supabase project.
+3. Review and adapt `database/seed.example.sql`; never apply the example unchanged in production.
+4. Sign in once with the owner's real phone, then bootstrap that Auth UUID as documented in `database/README.md`.
+5. Configure Supabase Phone Auth with Twilio and configure the matching Turnstile widget.
+6. Create the Google Wallet issuer/service account and grant it issuer access.
+7. Deploy to Vercel Pro or Enterprise. The committed cron jobs process Wallet updates every minute and database maintenance daily.
+8. Complete every gate in `docs/launch-checklist.md` on real Android and counter devices.
 
-Set `VITE_TURNSTILE_SITE_KEY` to render Cloudflare Turnstile during phone onboarding. Without it, a clearly marked local human-check control keeps the evaluation flow usable. The production OTP endpoint must validate the Turnstile token and enforce the included phone/IP rate-limit schema before sending SMS.
+Use `VITE_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` for new Supabase keys. The legacy `VITE_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` names remain accepted during migration.
 
-## Production boundary
+Full provider, migration, security, pilot, backup, monitoring, and rollback instructions are in `docs/production-runbook.md`.
 
-The browser adapter in `src/lib/store.ts` enforces tenant-qualified reads, role authorization, three OTP requests per phone/device per hour, rotating 60-second identifiers, 30-second scan debounce, five-minute redemption expiry, and 60-second undo. It is suitable for product evaluation and offline demonstrations, not as the source of truth for multiple physical devices.
-
-For deployment, replace that adapter with authenticated API calls backed by `database/schema.sql`. Execute balance mutations in one server-side database transaction and broadcast tenant-filtered committed rows over a realtime channel. SMS OTP delivery, barcode signing, Turnstile verification, and staff/owner identity verification belong in that server boundary; visible demo credentials are intentionally non-production.
-
-## Checks
+## Verification
 
 ```powershell
-npm run build
+npm run typecheck
+npm run test:unit
 npm run test:e2e
+npm run test:e2e:production
+npm run build
+npm audit
 ```
+
+Production configuration and live provider behavior must still be validated against a staging project because automated tests use mocked network boundaries.

@@ -11,6 +11,12 @@
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@screen/customer": ["src/entrypoints/customer.production.ts"],
+      "@screen/staff": ["src/entrypoints/staff.production.ts"],
+      "@screen/owner": ["src/entrypoints/owner.production.ts"]
+    },
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
