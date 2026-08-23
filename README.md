@@ -9,12 +9,12 @@ A multi-tenant, wallet-first loyalty system for hair salons. Customers enroll by
 - Phone-friendly owner portal: `/admin`
 - Tenant selection: `?tenant=luxe-hair-studio`
 
-Admin controls are never rendered in the customer app. The only customer-facing admin entry appears after sign-out and leads to the protected `/admin` route.
+Admin controls are never rendered in the customer app. The owner-dashboard link always leads to the protected `/admin` route.
 
 ## Architecture
 
 - React 18 and Vite PWA frontend
-- Vercel Functions under `api/`
+- One catch-all Vercel Function at `api/[...path].ts`
 - Supabase Auth, Postgres, RLS, Realtime, and atomic loyalty RPCs
 - Supabase phone authentication with an optional, temporary no-SMS pilot mode
 - Google Wallet LoyaltyClass/LoyaltyObject issuance with 60-second rotating QR values
