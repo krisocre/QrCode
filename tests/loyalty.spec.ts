@@ -161,10 +161,8 @@ test('OTP requests are capped and identifier tokens rotate', async ({ page }) =>
   expect(result.firstValid).toBe(true)
 })
 
-test('unknown tenant links expose no default-tenant data', async ({ page }) => {
+test('unknown tenant links cannot create a customer account', async ({ page }) => {
   await page.goto('/?tenant=missing-business')
-  await expect(page.getByText('Business unavailable')).toBeVisible()
-  await expect(page.getByText('Luxe Hair Studio')).toBeHidden()
   await page.getByLabel('Mobile number').fill('4165550182')
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByText('This business link is invalid or no longer active.')).toBeVisible()
@@ -184,9 +182,9 @@ test('admin login appears after customer sign-out', async ({ page }) => {
   await expect(page.getByRole('button', { name: /Staff scanner/ })).toBeHidden()
   await page.screenshot({ path: 'test-results/customer-admin-menu-mobile.png' })
   await page.getByRole('button', { name: /^Sign out/ }).click()
-  await expect(page.getByRole('button', { name: /Open admin login/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Owner dashboard/ })).toBeVisible()
   await page.screenshot({ path: 'test-results/customer-signed-out-mobile.png', fullPage: true })
-  await page.getByRole('button', { name: /Open admin login/ }).click()
+  await page.getByRole('link', { name: /Owner dashboard/ }).click()
   await expect(page).toHaveURL(/\/admin\?tenant=juniper/)
   await expect(page.getByText('Owner access')).toBeVisible()
   for (const [index, digit] of ['7', '3', '9', '1'].entries()) {

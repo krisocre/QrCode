@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, BadgeInfo, Check, ChevronRight, Clock3, Gift, Home, LogOut, MapPin, Menu, Phone, Scissors, ShieldCheck, Sparkles, UserRound } from 'lucide-react'
+import { ArrowLeft, BadgeInfo, Check, ChevronRight, Clock3, Gift, Home, LogOut, MapPin, Menu, Phone, ScanLine, Scissors, ShieldCheck, Sparkles, UserRound, WalletCards } from 'lucide-react'
 import { BottomSheet } from '../components/BottomSheet'
 import { BrandMark } from '../components/BrandMark'
 import { QRCode } from '../components/QRCode'
@@ -31,7 +31,6 @@ export function CustomerApp() {
   const [authError, setAuthError] = useState('')
   const [activeSection, setActiveSection] = useState<CustomerSection>('rewards')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [showAdminAccess, setShowAdminAccess] = useState(false)
 
   useEffect(() => {
     void readCustomerSession().then((session) => {
@@ -83,7 +82,6 @@ export function CustomerApp() {
     const profile = loyaltyStore.findCustomerByPhone(normalized) ?? loyaltyStore.registerCustomer(normalized)
     await saveCustomerSession(profile.id, database.tenant.id)
     setProfileId(profile.id)
-    setShowAdminAccess(false)
     setAuthError('')
     setView('dashboard')
   }
@@ -120,9 +118,9 @@ export function CustomerApp() {
         <section className="auth-panel">
           <BrandMark />
           <div className="auth-copy">
-            <p className="eyebrow">Luxe Hair Studio 2</p>
-            <h1>Your rewards,<br />right this way.</h1>
-            <p>Enter your mobile number to open your loyalty wallet.</p>
+            <p className="eyebrow">{database.tenant.id.startsWith('tenant-unavailable:') ? database.tenant.name : 'Luxe Hair Studio 2'}</p>
+            <h1>Your salon card,<br />inside your phone.</h1>
+            <p>Enter your number to add or restore your loyalty pass.</p>
           </div>
           <form onSubmit={submitPhone} className="auth-form">
             <label htmlFor="phone">Mobile number</label>
@@ -141,7 +139,14 @@ export function CustomerApp() {
           </form>
           <p className="demo-note">Returning demo member: (416) 555-0182</p>
           <p className="privacy-note"><ShieldCheck size={16} /> Your number is used only for your loyalty account.</p>
-          {showAdminAccess && <section className="signed-out-admin" aria-label="Signed out options"><div><p className="eyebrow">Signed out</p><strong>Need the owner dashboard?</strong></div><button type="button" onClick={() => window.location.assign(`/admin?tenant=${encodeURIComponent(database.tenant.slug)}`)}><ShieldCheck size={19} /><span>Open admin login</span><ChevronRight size={18} /></button></section>}
+          <nav className="portal-access" aria-label="Luxe Hair Studio access">
+            <a className="wallet-test-link" href={`/?tenant=${encodeURIComponent(database.tenant.slug)}&test-wallet=1`}>
+              <span><WalletCards size={20} /><strong>Test Google Wallet</strong><small>Available on the deployed app</small></span>
+              <ChevronRight size={20} />
+            </a>
+            <a href={`/staff?tenant=${encodeURIComponent(database.tenant.slug)}`}><ScanLine size={18} /><span>Staff scanner</span></a>
+            <a href={`/admin?tenant=${encodeURIComponent(database.tenant.slug)}`}><UserRound size={18} /><span>Owner dashboard</span></a>
+          </nav>
         </section>
       </main>
     )
@@ -247,7 +252,7 @@ export function CustomerApp() {
       <nav className="salon-bottom-nav" aria-label="Customer navigation"><button className={!menuOpen ? 'active' : ''} onClick={() => { setMenuOpen(false); setActiveSection('rewards'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}><Home size={20} /><span>Home</span></button><button className={menuOpen ? 'active' : ''} onClick={() => setMenuOpen(true)}><UserRound size={20} /><span>My Profile</span></button></nav>
 
       <BottomSheet open={menuOpen} title="My profile" onClose={() => setMenuOpen(false)}>
-        <div className="salon-menu-sheet salon-profile-sheet"><header className="member-profile-identity"><span className="profile-avatar">{customer.firstName.slice(0, 1)}{customer.lastName.slice(0, 1)}</span><div><p className="eyebrow">Luxe member</p><h3>{customer.firstName} {customer.lastName}</h3><span>{formatPhoneInput(customer.phone)}</span></div><span className="profile-member-since"><small>Member since</small><strong>{memberSinceYear}</strong></span></header><div className="profile-stats"><div><small>Balance</small><strong>{programBalance.toLocaleString()}</strong><span>{programUnit}</span></div><div><small>Ready now</small><strong>{availableRewards.length}</strong><span>{availableRewards.length === 1 ? 'reward' : 'rewards'}</span></div><div><small>Full card in</small><strong>{fullCardRemaining}</strong><span>{database.tenant.programType === 'stamps' ? 'visits' : 'points'}</span></div></div><section className="profile-detail-list"><div><Sparkles size={19} /><span><small>Membership number</small><strong>LUXE-{memberNumber}</strong></span></div><div><MapPin size={19} /><span><small>Home salon</small><strong>{database.tenant.name}</strong></span></div></section><button onClick={() => { setMenuOpen(false); setActiveSection('info'); window.scrollTo({ top: 252, behavior: 'smooth' }) }}><BadgeInfo size={20} /><span><strong>Salon information</strong><small>Location, opening hours, and contact details</small></span><ChevronRight size={18} /></button><button className="profile-sign-out" onClick={() => { clearCustomerSession(); setProfileId(null); setPhone('+1 '); setMenuOpen(false); setShowAdminAccess(true); setView('phone') }}><LogOut size={20} /><span><strong>Sign out</strong><small>Return to phone login</small></span><ChevronRight size={18} /></button></div>
+        <div className="salon-menu-sheet salon-profile-sheet"><header className="member-profile-identity"><span className="profile-avatar">{customer.firstName.slice(0, 1)}{customer.lastName.slice(0, 1)}</span><div><p className="eyebrow">Luxe member</p><h3>{customer.firstName} {customer.lastName}</h3><span>{formatPhoneInput(customer.phone)}</span></div><span className="profile-member-since"><small>Member since</small><strong>{memberSinceYear}</strong></span></header><div className="profile-stats"><div><small>Balance</small><strong>{programBalance.toLocaleString()}</strong><span>{programUnit}</span></div><div><small>Ready now</small><strong>{availableRewards.length}</strong><span>{availableRewards.length === 1 ? 'reward' : 'rewards'}</span></div><div><small>Full card in</small><strong>{fullCardRemaining}</strong><span>{database.tenant.programType === 'stamps' ? 'visits' : 'points'}</span></div></div><section className="profile-detail-list"><div><Sparkles size={19} /><span><small>Membership number</small><strong>LUXE-{memberNumber}</strong></span></div><div><MapPin size={19} /><span><small>Home salon</small><strong>{database.tenant.name}</strong></span></div></section><button onClick={() => { setMenuOpen(false); setActiveSection('info'); window.scrollTo({ top: 252, behavior: 'smooth' }) }}><BadgeInfo size={20} /><span><strong>Salon information</strong><small>Location, opening hours, and contact details</small></span><ChevronRight size={18} /></button><button className="profile-sign-out" onClick={() => { clearCustomerSession(); setProfileId(null); setPhone('+1 '); setMenuOpen(false); setView('phone') }}><LogOut size={20} /><span><strong>Sign out</strong><small>Return to phone login</small></span><ChevronRight size={18} /></button></div>
       </BottomSheet>
 
       <BottomSheet open={Boolean(selectedReward)} title="Redeem reward" onClose={() => setSelectedReward(null)}>
