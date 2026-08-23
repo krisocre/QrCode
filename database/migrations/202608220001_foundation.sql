@@ -473,7 +473,6 @@ create table public.otp_requests (
   tenant_id uuid not null references public.tenants(id) on delete cascade,
   phone_hash text not null,
   ip_hash text not null,
-  turnstile_verified boolean not null default false,
   provider_request_id text,
   created_at timestamptz not null default now()
 );

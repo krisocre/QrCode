@@ -8,9 +8,8 @@ Use this checklist with the detailed [production runbook](./production-runbook.m
 - [ ] Production provider accounts have MFA and at least two authorized business administrators.
 - [ ] Vercel Production variables match `.env.example`; no server secret has a `VITE_` prefix, `VITE_APP_MODE=production`, and `VITE_DEMO_MODE=false`.
 - [ ] The Vercel project is Pro/Enterprise so the committed one-minute Wallet retry schedule can deploy.
-- [ ] Supabase Auth Site URL, redirect allowlist, phone provider, CAPTCHA, and rate limits are production values.
+- [ ] Supabase Auth Site URL, redirect allowlist, phone provider, and rate limits are production values.
 - [ ] Twilio sender, geographic permissions, spending alert, and delivery alert are active.
-- [ ] Turnstile production widget allows only the production hostname.
 - [ ] Google issuer has publishing access; production service account has minimum required Wallet access.
 - [ ] Salon name, logo, address, hours, phone, privacy URL, loyalty rules, and reward costs are approved.
 - [ ] Current production backup is recoverable and the latest restore drill succeeded.

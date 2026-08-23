@@ -8,7 +8,6 @@ import { formatPhoneInput, normalizePhone } from '../lib/format'
 import { clearCustomerSession, readCustomerSession, saveCustomerSession } from '../lib/session'
 import { loyaltyStore } from '../lib/store'
 import type { PendingRedemption, Reward } from '../types'
-import { HumanCheck } from './HumanCheck'
 
 type AuthView = 'loading' | 'phone' | 'otp' | 'dashboard'
 type CustomerSection = 'rewards' | 'stylists' | 'info'
@@ -30,7 +29,6 @@ export function CustomerApp() {
   const [qrExpanded, setQrExpanded] = useState(false)
   const [now, setNow] = useState(Date.now())
   const [authError, setAuthError] = useState('')
-  const [captchaToken, setCaptchaToken] = useState('')
   const [activeSection, setActiveSection] = useState<CustomerSection>('rewards')
   const [menuOpen, setMenuOpen] = useState(false)
   const [showAdminAccess, setShowAdminAccess] = useState(false)
@@ -68,7 +66,7 @@ export function CustomerApp() {
       return
     }
     try {
-      loyaltyStore.requestOtp(normalizePhone(phone), captchaToken)
+      loyaltyStore.requestOtp(normalizePhone(phone))
       setAuthError('')
       setView('otp')
     } catch (error) {
@@ -138,7 +136,6 @@ export function CustomerApp() {
               onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
               autoFocus
             />
-            <HumanCheck onToken={setCaptchaToken} />
             {authError && <p className="field-error" role="alert">{authError}</p>}
             <button className="primary-button" type="submit">Continue <ChevronRight size={19} /></button>
           </form>

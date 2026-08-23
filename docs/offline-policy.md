@@ -9,7 +9,7 @@ The installed web app provides an offline application shell, not an offline sour
 - Previously visited SPA routes may open with the cached shell while offline.
 - Same-origin static assets use cache-first delivery with background refresh.
 - Navigations use network first and fall back only to cached HTML.
-- `/api/*`, Supabase, Turnstile, Google Wallet, and other cross-origin requests are never cached by the service worker.
+- `/api/*`, Supabase, Google Wallet, and other cross-origin requests are never cached by the service worker.
 - JavaScript, CSS, image, font, and manifest requests never fall back to HTML. A missing offline asset fails explicitly instead of producing a blank page through a MIME mismatch.
 - Runtime caching is capped so old content-hashed assets and visited routes cannot grow storage indefinitely across deployments.
 - Service-worker upgrades remove only caches owned by this application.

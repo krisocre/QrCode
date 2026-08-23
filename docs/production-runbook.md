@@ -31,7 +31,7 @@ A real Supabase secret was previously present in `.env.example`. It was not trac
    ```
 
 3. If a secret was ever committed, rotate it first. History rewriting is secondary and requires coordination with anyone who cloned the repository.
-4. Enable MFA for Supabase, Twilio, Cloudflare, Google Cloud, Google Pay & Wallet Console, Git hosting, and Vercel accounts.
+4. Enable MFA for Supabase, Twilio, Google Cloud, Google Pay & Wallet Console, Git hosting, and Vercel accounts.
 5. Never paste production credentials into issues, chat, logs, screenshots, or client-side `VITE_*` variables.
 
 Generate each application secret independently. This PowerShell expression creates a 48-byte random Base64 value:
@@ -52,7 +52,6 @@ Use [.env.example](../.env.example) as the variable contract. For local developm
 | --- | --- | --- |
 | `VITE_SUPABASE_URL` | Project origin such as `https://project-ref.supabase.co`; never append `/rest/v1/` | No |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase browser key constrained by RLS | No |
-| `VITE_TURNSTILE_SITE_KEY` | Public Turnstile widget key | No |
 | `VITE_APP_MODE` | Set to `production` in Preview and Production | No |
 | `VITE_DEMO_MODE` | Must be `false` in Preview and Production | No |
 | `VITE_DEFAULT_TENANT_SLUG` | Tenant used by `/`, `/staff`, and `/admin` when no query parameter is present | No |
@@ -66,14 +65,13 @@ Use [.env.example](../.env.example) as the variable contract. For local developm
 | `STAFF_SESSION_SECRET` | Signs short-lived staff sessions |
 | `QR_SIGNING_SECRET` | Signs and hashes QR and redemption tokens |
 | `CRON_SECRET` | Authenticates internal Wallet synchronization jobs |
-| `TURNSTILE_SECRET_KEY` | Validates the OTP request token with Cloudflare Siteverify |
 | `GOOGLE_WALLET_ISSUER_ID` | Numeric issuer ID from Google Pay & Wallet Console |
 | `GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL` | Service-account email granted issuer access |
 | `GOOGLE_WALLET_PRIVATE_KEY` | PEM key; Vercel may store it multiline or with escaped `\n` characters |
 
 The Google Wallet class suffix and allowed origins have safe defaults derived from the issuer and `APP_URL`; set their optional variables only when the deployment needs an override. Google save/delete callbacks are deliberately not accepted because they require Google Tink message verification and are not needed for pass issuance or balance updates.
 
-Twilio credentials live in Supabase Auth provider settings. This application validates Turnstile in `/api/auth/request-otp`, so its Turnstile secret is required in the Vercel runtime. The verified, single-use Turnstile token is intentionally not sent to Supabase for a second validation.
+Twilio credentials live in Supabase Auth provider settings. The application applies database-backed request throttling by phone hash and IP hash before asking Supabase Auth to send an OTP.
 
 Set production secrets only in Vercel's Production environment. Use separate credentials and a separate Supabase project in Preview. Development values belong in `.env.local`. After changing a Vercel environment variable, redeploy so the build and functions receive the new value.
 
@@ -81,7 +79,7 @@ Production builds fail closed when backend configuration is absent. Never enable
 
 Reference: [Vercel environment variables](https://vercel.com/docs/environment-variables), [Supabase API keys](https://supabase.com/docs/guides/api/api-keys).
 
-## 4. Supabase, Twilio, and Turnstile
+## 4. Supabase and Twilio
 
 ### Supabase project
 
@@ -90,8 +88,7 @@ Reference: [Vercel environment variables](https://vercel.com/docs/environment-va
 3. Keep the secret key in server environments only. It bypasses Row Level Security and must never reach the browser.
 4. In Authentication URL Configuration, set the production Site URL to `APP_URL`. Add only controlled staging/preview redirect URLs.
 5. Enable phone authentication. Use six-digit OTPs, a short expiry, and rate limits appropriate for checkout traffic.
-6. Leave Supabase Auth CAPTCHA disabled for this application. The OTP proxy validates Turnstile directly before calling Supabase Auth; enabling both would attempt to validate the same single-use token twice.
-7. Review Auth rate limits before the pilot and request increases only from observed demand.
+6. Review Auth rate limits before the pilot and request increases only from observed demand.
 
 ### Twilio
 
@@ -104,17 +101,6 @@ Reference: [Vercel environment variables](https://vercel.com/docs/environment-va
 
 Reference: [Supabase phone login](https://supabase.com/docs/guides/auth/phone-login).
 
-### Cloudflare Turnstile
-
-1. Create separate widgets for staging and production.
-2. Allow only the exact production hostname and controlled staging hostname.
-3. Put the public site key in the Vite environment.
-4. Put `TURNSTILE_SECRET_KEY` in the Vercel server environment. Do not expose it through a `VITE_*` variable.
-5. Keep Supabase Auth CAPTCHA disabled so the single-use token is validated exactly once by `/api/auth/request-otp`.
-6. Test rejected, expired, duplicate, wrong-hostname, and missing CAPTCHA tokens. Tokens must be validated server-side.
-
-Reference: [Turnstile server-side validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/).
-
 ## 5. Database provisioning
 
 The ordered files under `database/migrations` are authoritative. Apply these files in order and stop on the first error:
@@ -124,6 +110,7 @@ The ordered files under `database/migrations` are authoritative. Apply these fil
 3. `202608220003_core_rpcs.sql`
 4. `202608220004_operations_rpcs.sql`
 5. `202608220005_realtime_and_maintenance.sql`
+6. `202608220006_remove_turnstile.sql`
 
 From PowerShell with `psql` installed and `SUPABASE_DB_URL` set locally:
 
@@ -178,7 +165,7 @@ Reference: [Google Wallet issuer onboarding](https://developers.google.com/walle
 4. Choose a Function region near the production Supabase project.
 5. Configure Development, Preview, and Production variables as described above.
 6. Deploy Preview first. Confirm `/api/health` resolves to a Function and returns `status: ready`, while `/`, `/staff`, `/admin`, and other client routes resolve to the SPA.
-7. Attach the production domain and follow Vercel's displayed DNS records. Set the same origin in Supabase Auth, Turnstile, and Google Wallet configuration.
+7. Attach the production domain and follow Vercel's displayed DNS records. Set the same origin in Supabase Auth and Google Wallet configuration.
 8. Redeploy Production after all variables are present.
 
 The committed Wallet worker calls `GET /api/wallet/sync` every minute and processes at most 20 claimed jobs per invocation. It therefore requires a Vercel Pro or Enterprise project. Vercel Hobby permits only daily cron schedules and will reject this production cadence during deployment. The staff app also requests an immediate pass refresh after a committed checkout; the outbox worker is the durable retry path when that request or Google Wallet is temporarily unavailable.
@@ -191,7 +178,7 @@ Reference: [Vercel Cron usage and plan limits](https://vercel.com/docs/cron-jobs
 
 The deployment config deliberately sends `/api/*` through Vercel Functions, applies a SPA fallback only to non-API paths, disables caching for API responses, and assigns immutable caching only to Vite's content-hashed `/assets/*` files.
 
-The committed Content Security Policy permits standard `*.supabase.co` projects and Cloudflare Turnstile. Before adding a custom Supabase domain, analytics, error-reporting transport, or any other browser origin, integrate it explicitly, add only its required origin to the appropriate CSP directive, and retest Turnstile and scanner flows.
+The committed Content Security Policy permits standard `*.supabase.co` projects. Before adding a custom Supabase domain, analytics, error-reporting transport, or any other browser origin, integrate it explicitly, add only its required origin to the appropriate CSP directive, and retest authentication and scanner flows.
 
 ## 8. Build and automated checks
 
@@ -229,7 +216,7 @@ Run a staff-only dry run, then a limited customer pilot. Use at least two Androi
 For each pilot member:
 
 1. Scan the wall enrollment QR.
-2. Complete Turnstile and phone OTP.
+2. Complete phone OTP.
 3. Add the loyalty pass to Google Wallet.
 4. Close the browser and restore the pass from the profile page.
 5. Scan at the staff portal, confirm a visit, and watch the Wallet balance update.

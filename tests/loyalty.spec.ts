@@ -3,7 +3,6 @@ import { expect, test, type Page } from '@playwright/test'
 async function signInCustomer(page: Page) {
   await page.goto('/')
   await page.getByLabel('Mobile number').fill('4165550182')
-  await page.getByRole('button', { name: "I'm not a robot" }).click()
   await page.getByRole('button', { name: 'Continue' }).click()
   for (const [index, digit] of ['2', '4', '6', '8'].entries()) {
     await page.getByLabel(`Digit ${index + 1}`).fill(digit)
@@ -147,11 +146,11 @@ test('OTP requests are capped and identifier tokens rotate', async ({ page }) =>
   const result = await page.evaluate(async () => {
     const { loyaltyStore } = await import('/src/lib/store.ts')
     const phone = '+14165550999'
-    loyaltyStore.requestOtp(phone, 'verified')
-    loyaltyStore.requestOtp(phone, 'verified')
-    loyaltyStore.requestOtp(phone, 'verified')
+    loyaltyStore.requestOtp(phone)
+    loyaltyStore.requestOtp(phone)
+    loyaltyStore.requestOtp(phone)
     let rateLimitMessage = ''
-    try { loyaltyStore.requestOtp(phone, 'verified') } catch (error) { rateLimitMessage = error instanceof Error ? error.message : '' }
+    try { loyaltyStore.requestOtp(phone) } catch (error) { rateLimitMessage = error instanceof Error ? error.message : '' }
     const now = Date.now()
     const first = loyaltyStore.customerPayload('customer-jamie', now)
     const rotated = loyaltyStore.customerPayload('customer-jamie', now + 60_000)
@@ -167,7 +166,6 @@ test('unknown tenant links expose no default-tenant data', async ({ page }) => {
   await expect(page.getByText('Business unavailable')).toBeVisible()
   await expect(page.getByText('Luxe Hair Studio')).toBeHidden()
   await page.getByLabel('Mobile number').fill('4165550182')
-  await page.getByRole('button', { name: "I'm not a robot" }).click()
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByText('This business link is invalid or no longer active.')).toBeVisible()
 })

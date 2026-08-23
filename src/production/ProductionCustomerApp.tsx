@@ -3,7 +3,6 @@ import { ArrowLeft, BadgeInfo, ChevronRight, Clock3, Gift, Home, LogOut, MapPin,
 import { BottomSheet } from '../components/BottomSheet'
 import { BrandMark } from '../components/BrandMark'
 import { QRCode } from '../components/QRCode'
-import { HumanCheck } from '../customer/HumanCheck'
 import { ApiError } from '../lib/api-client'
 import { displayPhone, formatPhoneInput, normalizePhone } from '../lib/format'
 import { productionConfigurationIssues, tenantSlugFromLocation } from '../lib/runtime'
@@ -33,8 +32,6 @@ export function ProductionCustomerApp() {
   const [account, setAccount] = useState<CustomerProfileResponse | null>(null)
   const [phone, setPhone] = useState('+1 ')
   const [otp, setOtp] = useState(Array.from({ length: 6 }, () => ''))
-  const [captchaToken, setCaptchaToken] = useState('')
-  const [humanCheckKey, setHumanCheckKey] = useState(0)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [consentAccepted, setConsentAccepted] = useState(false)
@@ -121,20 +118,14 @@ export function ProductionCustomerApp() {
       setError('Enter a valid 10-digit mobile number.')
       return
     }
-    if (!captchaToken) {
-      setError('Complete the security check first.')
-      return
-    }
     setBusy(true)
     setError('')
     try {
-      await productionApi.requestOtp({ tenantSlug, phone: normalized, captchaToken })
+      await productionApi.requestOtp({ tenantSlug, phone: normalized })
       setOtp(Array.from({ length: 6 }, () => ''))
       setView('otp')
     } catch (caught) {
       setError(messageFor(caught, 'Unable to send a verification code.'))
-      setCaptchaToken('')
-      setHumanCheckKey((value) => value + 1)
     } finally {
       setBusy(false)
     }
@@ -237,7 +228,7 @@ export function ProductionCustomerApp() {
     return <main className="salon-info-shell"><header className="salon-info-hero" style={{ backgroundImage: `linear-gradient(to bottom, rgba(26,26,26,.08), rgba(26,26,26,.76)), url(${tenant.heroImageUrl || '/salon-interior-pink.png'})` }}><a href={`/?tenant=${encodeURIComponent(tenant.slug)}`} className="salon-info-back" aria-label="Back to membership"><ArrowLeft size={21} /></a><div><p className="eyebrow">Salon information</p><h1>{tenant.name}</h1></div></header><section className="salon-info-content"><article><MapPin size={22} /><div><p className="eyebrow">Location</p><h2>{tenant.address || 'Address coming soon'}</h2>{tenant.address && <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tenant.address)}`} target="_blank" rel="noreferrer">Open in Maps <ChevronRight size={17} /></a>}</div></article><article><Clock3 size={22} /><div><p className="eyebrow">Opening hours</p>{hours.length ? <dl>{hours.map(([day, value]) => <div key={day}><dt>{day}</dt><dd>{value}</dd></div>)}</dl> : <p>Contact the salon for today's hours.</p>}</div></article><article><BadgeInfo size={22} /><div><p className="eyebrow">About</p><p>{tenant.generalInfo || `${tenant.name} loyalty members collect rewards with every eligible visit.`}</p></div></article>{tenant.phone && <a className="salon-info-call" href={`tel:${tenant.phone}`}><Phone size={19} /> Call {tenant.name}</a>}</section></main>
   }
 
-  if (view === 'phone') return <main className="auth-shell"><section className="auth-panel"><BrandMark /><div className="auth-copy"><p className="eyebrow">{tenant.name}</p><h1>Your salon card,<br />inside your phone.</h1><p>Verify your number to add or restore your loyalty pass.</p></div><form className="auth-form" onSubmit={requestCode}><label htmlFor="production-phone">Mobile number</label><input id="production-phone" className="phone-input" type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(formatPhoneInput(event.target.value))} autoFocus /><HumanCheck key={humanCheckKey} onToken={setCaptchaToken} />{error && <p className="field-error" role="alert">{error}</p>}<button className="primary-button" type="submit" disabled={busy}>{busy ? 'Sending code...' : <>Continue <ChevronRight size={19} /></>}</button></form><p className="privacy-note"><ShieldCheck size={16} /> Your number is used to secure your membership.</p>{showOwnerLink && <a className="quiet-admin-link" href={`/admin?tenant=${encodeURIComponent(tenant.slug)}`}>Owner login</a>}</section></main>
+  if (view === 'phone') return <main className="auth-shell"><section className="auth-panel"><BrandMark /><div className="auth-copy"><p className="eyebrow">{tenant.name}</p><h1>Your salon card,<br />inside your phone.</h1><p>Verify your number to add or restore your loyalty pass.</p></div><form className="auth-form" onSubmit={requestCode}><label htmlFor="production-phone">Mobile number</label><input id="production-phone" className="phone-input" type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(formatPhoneInput(event.target.value))} autoFocus />{error && <p className="field-error" role="alert">{error}</p>}<button className="primary-button" type="submit" disabled={busy}>{busy ? 'Sending code...' : <>Continue <ChevronRight size={19} /></>}</button></form><p className="privacy-note"><ShieldCheck size={16} /> Your number is used to secure your membership.</p>{showOwnerLink && <a className="quiet-admin-link" href={`/admin?tenant=${encodeURIComponent(tenant.slug)}`}>Owner login</a>}</section></main>
 
   if (view === 'otp') return <main className="auth-shell"><section className="auth-panel otp-panel"><button className="text-back-button" onClick={() => { setView('phone'); setError('') }}>Back</button><div className="auth-copy"><p className="eyebrow">Check your phone</p><h1>Enter the six-digit code.</h1><p>We sent it to {phone}.</p></div><div className="otp-row production-otp-row" aria-label="Verification code">{otp.map((digit, index) => <input key={index} id={`production-otp-${index}`} value={digit} inputMode="numeric" autoComplete={index === 0 ? 'one-time-code' : 'off'} maxLength={1} aria-label={`Digit ${index + 1}`} onChange={(event) => updateOtp(index, event.target.value)} onKeyDown={(event) => { if (event.key === 'Backspace' && !digit && index > 0) document.getElementById(`production-otp-${index - 1}`)?.focus() }} autoFocus={index === 0} disabled={busy} />)}</div>{error && <p className="field-error" role="alert">{error}</p>}<button className="primary-button" type="button" disabled={busy || otp.some((digit) => !digit)} onClick={() => void verifyCode()}>{busy ? 'Checking...' : 'Verify number'}</button></section></main>
 

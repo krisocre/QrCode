@@ -153,7 +153,7 @@ export const productionApi = {
     }
   },
 
-  requestOtp(input: { tenantSlug: string; phone: string; captchaToken: string }) {
+  requestOtp(input: { tenantSlug: string; phone: string }) {
     return apiRequest<{ ok: boolean; retryAfterSeconds?: number }>('/api/auth/request-otp', { method: 'POST', body: input })
   },
 

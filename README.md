@@ -16,7 +16,6 @@ Admin controls are never rendered in the customer app. The only customer-facing 
 - React 18 and Vite PWA frontend
 - Vercel Functions under `api/`
 - Supabase Auth, Postgres, RLS, Realtime, and atomic loyalty RPCs
-- Cloudflare Turnstile before SMS OTP requests
 - Twilio SMS through the Supabase Auth provider
 - Google Wallet LoyaltyClass/LoyaltyObject issuance with 60-second rotating QR values
 - Signed, earn-only offline recovery for a visit validated before a connection drop
@@ -39,7 +38,7 @@ Open `http://localhost:5173`. Demo credentials remain local-only and production 
 2. Apply `database/migrations/*.sql` in lexical order to a clean Supabase project.
 3. Review and adapt `database/seed.example.sql`; never apply the example unchanged in production.
 4. Sign in once with the owner's real phone, then bootstrap that Auth UUID as documented in `database/README.md`.
-5. Configure Supabase Phone Auth with Twilio and configure the matching Turnstile widget.
+5. Configure Supabase Phone Auth with Twilio and set appropriate OTP and rate-limit policies.
 6. Create the Google Wallet issuer/service account and grant it issuer access.
 7. Deploy to Vercel Pro or Enterprise. The committed cron jobs process Wallet updates every minute and database maintenance daily.
 8. Complete every gate in `docs/launch-checklist.md` on real Android and counter devices.

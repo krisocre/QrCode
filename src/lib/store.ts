@@ -187,9 +187,8 @@ export const loyaltyStore = {
   findCustomerByPhone(phone: string): Profile | undefined {
     return snapshot.profiles.find((profile) => profile.role === 'customer' && profile.phone === phone)
   },
-  requestOtp(phone: string, captchaToken: string): void {
+  requestOtp(phone: string): void {
     ensureTenantAvailable()
-    if (!captchaToken) throw new Error('Complete the security check first.')
     let deviceId = localStorage.getItem(DEVICE_KEY)
     if (!deviceId) {
       deviceId = crypto.randomUUID()

@@ -232,55 +232,6 @@ p {
   border-color: var(--emerald);
 }
 
-.human-check {
-  display: grid;
-  width: 100%;
-  min-height: 58px;
-  grid-template-columns: 24px minmax(0, 1fr) 28px;
-  gap: 11px;
-  align-items: center;
-  margin: 0 0 14px;
-  padding: 9px 13px;
-  border: 1px solid var(--border-strong);
-  border-radius: 5px;
-  color: #4f4c47;
-  background: #f2f0ec;
-  font-size: 0.83rem;
-  text-align: left;
-  cursor: pointer;
-}
-
-.human-check > svg {
-  color: #77736c;
-}
-
-.human-check.verified {
-  border-color: #b9d2c4;
-  color: var(--emerald);
-  background: var(--emerald-light);
-}
-
-.human-checkbox {
-  display: grid;
-  width: 23px;
-  height: 23px;
-  place-items: center;
-  border: 1px solid #aaa59c;
-  border-radius: 3px;
-  background: white;
-}
-
-.verified .human-checkbox {
-  border-color: var(--emerald);
-  color: white;
-  background: var(--emerald);
-}
-
-.turnstile-container {
-  min-height: 65px;
-  margin-bottom: 12px;
-}
-
 .field-error,
 .pin-error,
 .transaction-error {

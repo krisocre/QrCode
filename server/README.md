@@ -82,10 +82,9 @@ The signature is the raw IEEE-P1363 value encoded with base64url. Submission use
 ## Server environment
 
 Required values are `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`,
-`SUPABASE_SECRET_KEY`, `TURNSTILE_SECRET_KEY`, `APP_URL`, `QR_SIGNING_SECRET`,
+`SUPABASE_SECRET_KEY`, `APP_URL`, `QR_SIGNING_SECRET`,
 `STAFF_SESSION_SECRET`, `CRON_SECRET`, `GOOGLE_WALLET_ISSUER_ID`,
 `GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL`, and `GOOGLE_WALLET_PRIVATE_KEY`.
 
-The API verifies Turnstile itself before asking Supabase Auth to send an OTP. Do not also enable
-Supabase CAPTCHA for this proxy flow because a Turnstile token is single use. Twilio is configured
-as the SMS provider in Supabase Auth.
+Twilio is configured as the SMS provider in Supabase Auth. The OTP endpoint adds
+per-phone and per-IP database-backed request throttling before it calls Supabase.
