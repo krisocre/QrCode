@@ -101,6 +101,9 @@ test('production customer entrypoint is wallet-first and contains no demo creden
   await expect(page.getByLabel('Mobile number')).toBeVisible()
   await expect(page.getByText(/Demo OTP|Try 2468|Demo member/)).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Owner login' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Test Google Wallet' })).toHaveAttribute('href', '/?tenant=juniper&test-wallet=1')
+  await expect(page.getByRole('link', { name: 'Staff scanner' })).toHaveAttribute('href', '/staff?tenant=juniper')
+  await expect(page.getByRole('link', { name: 'Owner dashboard' })).toHaveAttribute('href', '/admin?tenant=juniper')
 })
 
 test('salon information is public and contains location and hours', async ({ page }) => {
@@ -148,6 +151,36 @@ test('signed-in customer can create a five-minute reward code', async ({ page })
   await page.getByRole('button', { name: 'Create redemption code' }).click()
   await expect(page.getByText(/Expires in/)).toBeVisible()
   await expect(page.locator('.redemption-code canvas')).toBeVisible()
+})
+
+test('wallet test route issues a customer pass without a staff action', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await mockPublicConfiguration(page)
+  await seedCustomerSession(page)
+  await page.route('**/api/customer/profile', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ...publicTenant,
+      profile: { id: 'customer-one', role: 'customer', firstName: 'Maya', lastName: 'Chen', phone: '+14165550182', stamps: 0, points: 0, memberSince: '2025-04-12T00:00:00.000Z' },
+      transactions: [],
+      walletPass: null,
+    }),
+  }))
+  let walletRequested = false
+  await page.route('**/api/customer/wallet', (route) => {
+    walletRequested = true
+    expect(route.request().headers()['x-tenant-id']).toBe('tenant-test')
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ objectId: 'issuer.customer-test', saveUrl: 'https://pay.google.com/gp/v/save/test-pass' }),
+    })
+  })
+  await page.route('https://pay.google.com/**', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<title>Google Wallet</title>' }))
+
+  await page.goto('/?tenant=juniper&test-wallet=1')
+  await expect.poll(() => walletRequested).toBe(true)
 })
 
 test('production staff entrypoint requires owner-enrolled hardware', async ({ page }) => {

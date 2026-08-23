@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, BadgeInfo, ChevronRight, Clock3, Gift, Home, LogOut, MapPin, Phone, ShieldCheck, Sparkles, UserRound, WalletCards } from 'lucide-react'
+import { ArrowLeft, BadgeInfo, ChevronRight, Clock3, Gift, Home, LogOut, MapPin, Phone, ScanLine, ShieldCheck, Sparkles, UserRound, WalletCards } from 'lucide-react'
 import { BottomSheet } from '../components/BottomSheet'
 import { BrandMark } from '../components/BrandMark'
 import { QRCode } from '../components/QRCode'
@@ -26,6 +26,7 @@ export function ProductionCustomerApp() {
   const tenantSlug = tenantSlugFromLocation()
   const isInfoRoute = window.location.pathname === '/info' || window.location.pathname.startsWith('/info/')
   const isProfileRoute = window.location.pathname === '/profile' || window.location.pathname.startsWith('/profile/')
+  const walletTestRequested = new URLSearchParams(window.location.search).get('test-wallet') === '1'
   const configurationIssues = productionConfigurationIssues()
   const [view, setView] = useState<CustomerView>('booting')
   const [publicData, setPublicData] = useState<PublicTenantResponse | null>(null)
@@ -39,7 +40,7 @@ export function ProductionCustomerApp() {
   const [error, setError] = useState('')
   const [profileOpen, setProfileOpen] = useState(isProfileRoute)
   const [walletMessage, setWalletMessage] = useState('')
-  const [showOwnerLink, setShowOwnerLink] = useState(false)
+  const [walletTestStarted, setWalletTestStarted] = useState(false)
   const [selectedReward, setSelectedReward] = useState<ProductionReward | null>(null)
   const [redemption, setRedemption] = useState<{ barcodeValue: string; expiresAt: string } | null>(null)
   const [now, setNow] = useState(Date.now())
@@ -110,6 +111,12 @@ export function ProductionCustomerApp() {
     const timer = window.setInterval(() => setNow(Date.now()), 1_000)
     return () => window.clearInterval(timer)
   }, [redemption])
+
+  useEffect(() => {
+    if (!walletTestRequested || !account || walletTestStarted) return
+    setWalletTestStarted(true)
+    void addToWallet()
+  }, [account, walletTestRequested, walletTestStarted])
 
   async function requestCode(event: React.FormEvent) {
     event.preventDefault()
@@ -220,7 +227,7 @@ export function ProductionCustomerApp() {
     setAccount(null)
     setPhone('+1 ')
     setProfileOpen(false)
-    setShowOwnerLink(true)
+    setWalletTestStarted(false)
     setView('phone')
     setBusy(false)
   }
@@ -237,7 +244,10 @@ export function ProductionCustomerApp() {
     return <main className="salon-info-shell"><header className="salon-info-hero" style={{ backgroundImage: `linear-gradient(to bottom, rgba(26,26,26,.08), rgba(26,26,26,.76)), url(${tenant.heroImageUrl || '/salon-interior-pink.png'})` }}><a href={`/?tenant=${encodeURIComponent(tenant.slug)}`} className="salon-info-back" aria-label="Back to membership"><ArrowLeft size={21} /></a><div><p className="eyebrow">Salon information</p><h1>{tenant.name}</h1></div></header><section className="salon-info-content"><article><MapPin size={22} /><div><p className="eyebrow">Location</p><h2>{tenant.address || 'Address coming soon'}</h2>{tenant.address && <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tenant.address)}`} target="_blank" rel="noreferrer">Open in Maps <ChevronRight size={17} /></a>}</div></article><article><Clock3 size={22} /><div><p className="eyebrow">Opening hours</p>{hours.length ? <dl>{hours.map(([day, value]) => <div key={day}><dt>{day}</dt><dd>{value}</dd></div>)}</dl> : <p>Contact the salon for today's hours.</p>}</div></article><article><BadgeInfo size={22} /><div><p className="eyebrow">About</p><p>{tenant.generalInfo || `${tenant.name} loyalty members collect rewards with every eligible visit.`}</p></div></article>{tenant.phone && <a className="salon-info-call" href={`tel:${tenant.phone}`}><Phone size={19} /> Call {tenant.name}</a>}</section></main>
   }
 
-  if (view === 'phone') return <main className="auth-shell"><section className="auth-panel"><BrandMark /><div className="auth-copy"><p className="eyebrow">{tenant.name}</p><h1>Your salon card,<br />inside your phone.</h1><p>Enter your number to add or restore your loyalty pass.</p></div><form className="auth-form" onSubmit={requestCode}><label htmlFor="production-phone">Mobile number</label><input id="production-phone" className="phone-input" type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(formatPhoneInput(event.target.value))} autoFocus />{error && <p className="field-error" role="alert">{error}</p>}<button className="primary-button" type="submit" disabled={busy}>{busy ? 'Opening...' : <>Continue <ChevronRight size={19} /></>}</button></form><p className="privacy-note"><ShieldCheck size={16} /> Your number is used to find your salon membership.</p>{showOwnerLink && <a className="quiet-admin-link" href={`/admin?tenant=${encodeURIComponent(tenant.slug)}`}>Owner login</a>}</section></main>
+  if (view === 'phone') {
+    const tenantQuery = encodeURIComponent(tenant.slug)
+    return <main className="auth-shell"><section className="auth-panel"><BrandMark /><div className="auth-copy"><p className="eyebrow">{tenant.name}</p><h1>Your salon card,<br />inside your phone.</h1><p>Enter your number to add or restore your loyalty pass.</p></div><form className="auth-form" onSubmit={requestCode}><label htmlFor="production-phone">Mobile number</label><input id="production-phone" className="phone-input" type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(formatPhoneInput(event.target.value))} autoFocus />{error && <p className="field-error" role="alert">{error}</p>}<button className="primary-button" type="submit" disabled={busy}>{busy ? 'Opening...' : <>Continue <ChevronRight size={19} /></>}</button></form><p className="privacy-note"><ShieldCheck size={16} /> Your number is used to find your salon membership.</p><nav className="portal-access" aria-label="Salon team access"><a className="portal-access-wallet" href={`/?tenant=${tenantQuery}&test-wallet=1`}><WalletCards size={19} /><span><strong>Test Google Wallet</strong><small>Create a personal test pass</small></span><ChevronRight size={18} /></a><div><a href={`/staff?tenant=${tenantQuery}`}><ScanLine size={18} /><span>Staff scanner</span></a><a href={`/admin?tenant=${tenantQuery}`}><UserRound size={18} /><span>Owner dashboard</span></a></div></nav></section></main>
+  }
 
   if (view === 'otp') return <main className="auth-shell"><section className="auth-panel otp-panel"><button className="text-back-button" onClick={() => { setView('phone'); setError('') }}>Back</button><div className="auth-copy"><p className="eyebrow">Check your phone</p><h1>Enter the six-digit code.</h1><p>We sent it to {phone}.</p></div><div className="otp-row production-otp-row" aria-label="Verification code">{otp.map((digit, index) => <input key={index} id={`production-otp-${index}`} value={digit} inputMode="numeric" autoComplete={index === 0 ? 'one-time-code' : 'off'} maxLength={1} aria-label={`Digit ${index + 1}`} onChange={(event) => updateOtp(index, event.target.value)} onKeyDown={(event) => { if (event.key === 'Backspace' && !digit && index > 0) document.getElementById(`production-otp-${index - 1}`)?.focus() }} autoFocus={index === 0} disabled={busy} />)}</div>{error && <p className="field-error" role="alert">{error}</p>}<button className="primary-button" type="button" disabled={busy || otp.some((digit) => !digit)} onClick={() => void verifyCode()}>{busy ? 'Checking...' : 'Verify number'}</button></section></main>
 
@@ -262,7 +272,7 @@ export function ProductionCustomerApp() {
     <section className="wallet-details-band"><div className="production-section-heading"><div><p className="eyebrow">Membership</p><h2>At a glance</h2></div><Sparkles size={21} /></div><div className="wallet-stat-grid"><div><strong>{balance}</strong><span>{programUnit}</span></div><div><strong>{earnedRewards.length}</strong><span>ready</span></div><div><strong>{visits}</strong><span>recorded visits</span></div></div></section>
     <section className="wallet-contact-band"><div><MapPin size={20} /><span><small>Home salon</small><strong>{tenant.address || tenant.name}</strong></span></div>{tenant.phone && <a href={`tel:${tenant.phone}`}><Phone size={19} /><span>Call the salon</span></a>}<a href={`/info?tenant=${encodeURIComponent(tenant.slug)}`}><BadgeInfo size={19} /><span>Salon information</span></a></section>
     <nav className="salon-bottom-nav production-bottom-nav" aria-label="Customer navigation"><button className={!profileOpen ? 'active' : ''} onClick={() => { setProfileOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}><Home size={20} /><span>Home</span></button><button className={profileOpen ? 'active' : ''} onClick={() => setProfileOpen(true)}><UserRound size={20} /><span>My Profile</span></button></nav>
-    <BottomSheet open={profileOpen} title="My profile" onClose={() => setProfileOpen(false)}><div className="production-profile-sheet"><header><span>{profile.firstName.slice(0, 1)}{profile.lastName.slice(0, 1)}</span><div><p className="eyebrow">Member since {memberSince}</p><h3>{profile.firstName} {profile.lastName}</h3><p>{displayPhone(profile.phone)}</p></div></header><div className="profile-detail-list"><div><Sparkles size={19} /><span><small>Membership activity</small><strong>{visits ? `${visits} recent salon ${visits === 1 ? 'visit' : 'visits'}` : 'Your first salon visit is ahead'}</strong></span></div><div><Clock3 size={19} /><span><small>Wallet status</small><strong>{profile.wallet ? 'Pass issued' : 'Ready to add'}</strong></span></div><div><ShieldCheck size={19} /><span><small>Account security</small><strong>Phone verified</strong></span></div></div><button className="profile-sign-out" onClick={() => void signOut()} disabled={busy}><LogOut size={20} /><span><strong>Sign out</strong><small>Keep the pass in Google Wallet</small></span><ChevronRight size={18} /></button></div></BottomSheet>
+    <BottomSheet open={profileOpen} title="My profile" onClose={() => setProfileOpen(false)}><div className="production-profile-sheet"><header><span>{profile.firstName.slice(0, 1)}{profile.lastName.slice(0, 1)}</span><div><p className="eyebrow">Member since {memberSince}</p><h3>{profile.firstName} {profile.lastName}</h3><p>{displayPhone(profile.phone)}</p></div></header><div className="profile-detail-list"><div><Sparkles size={19} /><span><small>Membership activity</small><strong>{visits ? `${visits} recent salon ${visits === 1 ? 'visit' : 'visits'}` : 'Your first salon visit is ahead'}</strong></span></div><div><Clock3 size={19} /><span><small>Wallet status</small><strong>{profile.wallet ? 'Pass issued' : 'Ready to add'}</strong></span></div><div><ShieldCheck size={19} /><span><small>Membership access</small><strong>Phone sign-in enabled</strong></span></div></div><button className="profile-sign-out" onClick={() => void signOut()} disabled={busy}><LogOut size={20} /><span><strong>Sign out</strong><small>Keep the pass in Google Wallet</small></span><ChevronRight size={18} /></button></div></BottomSheet>
     <BottomSheet open={Boolean(selectedReward)} title={redemption ? 'Redemption code' : 'Use this reward'} onClose={() => { setSelectedReward(null); setRedemption(null); setWalletMessage('') }} className="redemption-sheet">{selectedReward && (redemption ? <div className="redemption-code">{Date.parse(redemption.expiresAt) <= now ? <div className="expired-code"><Clock3 size={30} /><h3>This code has expired.</h3><p>Close this sheet and create a new code when the cashier is ready.</p></div> : <><p className="eyebrow">{selectedReward.name}</p><QRCode value={redemption.barcodeValue} size={280} /><div className="countdown"><Clock3 size={18} /> Expires in <strong>{formatCountdown(Date.parse(redemption.expiresAt) - now)}</strong></div><p className="scan-instruction">Let the cashier scan this code before confirming the reward.</p></>}</div> : <div className="production-redeem-confirm"><span><Gift size={24} /></span><h3>{selectedReward.name}</h3><p>This creates a single-use code for the front desk. It expires after five minutes.</p>{walletMessage && <p className="field-error" role="alert">{walletMessage}</p>}<button className="confirm-transaction" disabled={busy} onClick={() => void createRedemption()}><Gift size={19} /> {busy ? 'Preparing...' : 'Create redemption code'}</button></div>)}</BottomSheet>
   </main>
 }

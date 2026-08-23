@@ -81,6 +81,8 @@ To proceed before Twilio is configured, keep Supabase Phone Auth enabled, set `A
 
 This is deliberately not ownership verification. Anyone who knows a member's phone number can open that member's loyalty account, and anyone who knows an owner's number can attempt to enter `/admin` as that owner. Use it only for a private setup pilot with non-sensitive test accounts, then set the variable to `false` or remove it before public use. Staff device enrollment and staff PIN checks remain enforced.
 
+For a test user on Android, open `/?tenant=<tenant-slug>&test-wallet=1` on the deployed HTTPS origin. Complete the normal number and name setup; the app creates that member's pass and opens the Google Wallet save screen automatically. This does not require a staff or owner approval.
+
 Set production secrets only in Vercel's Production environment. Use separate credentials and a separate Supabase project in Preview. Development values belong in `.env.local`. After changing a Vercel environment variable, redeploy so the build and functions receive the new value.
 
 Production builds fail closed when backend configuration is absent. Never enable `VITE_DEMO_MODE` on Preview or Production; it exposes fixture accounts and demo PINs. Demo mode is limited to local Vite development with synthetic data.

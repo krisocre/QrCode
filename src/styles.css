@@ -264,6 +264,75 @@ p {
   font-size: 0.76rem;
 }
 
+.portal-access {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.portal-access-wallet {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 62px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--charcoal);
+  background: var(--paper);
+  text-decoration: none;
+}
+
+.portal-access-wallet > svg:first-child {
+  color: var(--emerald);
+}
+
+.portal-access-wallet span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.portal-access-wallet strong {
+  font-size: 0.86rem;
+}
+
+.portal-access-wallet small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.portal-access > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.portal-access > div a {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.portal-access > div a:hover {
+  border-color: var(--border-strong);
+  color: var(--charcoal);
+}
+
 .signed-out-admin {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
