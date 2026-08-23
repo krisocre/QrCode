@@ -16,6 +16,7 @@ Balance mutations must include a unique `Idempotency-Key` header.
 - `GET /api/public/tenant?slug=<slug>`
 - `POST /api/auth/request-otp`
 - `POST /api/auth/verify-otp`
+- `POST /api/auth/phone-login` (only when temporary phone-only mode is enabled)
 - `POST /api/auth/refresh`
 - `POST /api/auth/logout`
 - `POST /api/customer/enroll`
@@ -88,3 +89,9 @@ Required values are `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`,
 
 Twilio is configured as the SMS provider in Supabase Auth. The OTP endpoint adds
 per-phone and per-IP database-backed request throttling before it calls Supabase.
+
+For an initial non-SMS pilot only, set `ALLOW_UNVERIFIED_PHONE_LOGIN=true`. The
+phone screen then creates a normal Supabase session directly and still applies the
+same phone/IP throttle. This mode lets anyone who knows a member's number access
+that membership, including owner accounts, and must be disabled before inviting
+real customers.

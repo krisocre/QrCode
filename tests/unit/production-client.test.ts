@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { setSupabaseSession } from '../../src/lib/supabase'
 import { normalizeProfile, normalizeReward, normalizeTenant, normalizeTransaction, productionApi } from '../../src/production/client'
+
+vi.mock('../../src/lib/supabase', () => ({
+  setSupabaseSession: vi.fn().mockResolvedValue({}),
+}))
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -62,5 +67,22 @@ describe('production API normalization', () => {
       rewardId: 'reward-1',
       scanToken: 'signed-scan-token',
     })
+  })
+
+  it('creates a standard Supabase session from the temporary phone-only endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      accessToken: 'customer-access-token',
+      refreshToken: 'customer-refresh-token',
+      expiresIn: 3600,
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await productionApi.phoneLogin({ tenantSlug: 'luxe-hair', phone: '+14165550182' })
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/phone-login', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ tenantSlug: 'luxe-hair', phone: '+14165550182' }),
+    }))
+    expect(setSupabaseSession).toHaveBeenCalledWith('customer-access-token', 'customer-refresh-token')
   })
 })

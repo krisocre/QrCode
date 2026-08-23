@@ -10,6 +10,7 @@ Use this checklist with the detailed [production runbook](./production-runbook.m
 - [ ] The Vercel project is Pro/Enterprise so the committed one-minute Wallet retry schedule can deploy.
 - [ ] Supabase Auth Site URL, redirect allowlist, phone provider, and rate limits are production values.
 - [ ] Twilio sender, geographic permissions, spending alert, and delivery alert are active.
+- [ ] `ALLOW_UNVERIFIED_PHONE_LOGIN` is absent or `false`; a public launch must require verified phone ownership.
 - [ ] Google issuer has publishing access; production service account has minimum required Wallet access.
 - [ ] Salon name, logo, address, hours, phone, privacy URL, loyalty rules, and reward costs are approved.
 - [ ] Current production backup is recoverable and the latest restore drill succeeded.

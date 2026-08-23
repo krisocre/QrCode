@@ -163,6 +163,12 @@ export const productionApi = {
     return result
   },
 
+  async phoneLogin(input: { tenantSlug: string; phone: string }) {
+    const result = await apiRequest<{ accessToken: string; refreshToken: string; expiresIn: number }>('/api/auth/phone-login', { method: 'POST', body: input })
+    await setSupabaseSession(result.accessToken, result.refreshToken)
+    return result
+  },
+
   async customerProfile(): Promise<CustomerProfileResponse> {
     return normalizeCustomerResponse(await tenantRequest('/api/customer/profile'))
   },

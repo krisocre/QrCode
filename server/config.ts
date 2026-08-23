@@ -21,6 +21,10 @@ function baseUrl(value: string): string {
   return value.replace(/\/rest\/v1\/?$/i, '').replace(/\/$/, '')
 }
 
+function enabled(name: string): boolean {
+  return optional(name)?.toLowerCase() === 'true'
+}
+
 export const config = {
   get supabaseUrl() {
     return baseUrl(required('VITE_SUPABASE_URL'))
@@ -61,5 +65,8 @@ export const config = {
   },
   get cronSecret() {
     return secret('CRON_SECRET')
+  },
+  get allowUnverifiedPhoneLogin() {
+    return enabled('ALLOW_UNVERIFIED_PHONE_LOGIN')
   },
 }

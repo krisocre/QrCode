@@ -103,10 +103,19 @@ export function ProductionOwnerApp() {
     if (normalizePhone(phone).length !== 12) { setError('Enter a valid 10-digit mobile number.'); return }
     setBusy(true); setError('')
     try {
-      await productionApi.requestOtp({ tenantSlug, phone: normalizePhone(phone) })
-      setOtp(Array.from({ length: 6 }, () => ''))
-      setView('otp')
-    } catch (caught) { setError(caught instanceof Error ? caught.message : 'Unable to send a code.') }
+      await productionApi.phoneLogin({ tenantSlug, phone: normalizePhone(phone) })
+      if (publicData) await loadAdmin(publicData)
+    } catch (caught) {
+      if (caught instanceof ApiError && caught.code === 'unverified_phone_login_disabled') {
+        try {
+          await productionApi.requestOtp({ tenantSlug, phone: normalizePhone(phone) })
+          setOtp(Array.from({ length: 6 }, () => ''))
+          setView('otp')
+        } catch (otpError) { setError(otpError instanceof Error ? otpError.message : 'Unable to send a code.') }
+      } else {
+        setError(caught instanceof Error ? caught.message : 'Unable to open the owner portal.')
+      }
+    }
     finally { setBusy(false) }
   }
 
@@ -226,7 +235,7 @@ export function ProductionOwnerApp() {
   if (view === 'booting') return <main className="owner-lock"><div className="loading-line" /></main>
   if (view === 'unavailable') return <main className="owner-lock"><section className="pin-panel owner-pin-panel"><BrandMark inverse /><ShieldCheck size={28} /><h1>Owner portal is not configured.</h1><p>{configurationIssues.length ? `Missing ${configurationIssues.join(', ')}.` : error}</p></section></main>
   const tenantName = publicData?.tenant.name ?? 'Luxe Hair Studio'
-  if (view === 'phone') return <main className="owner-lock"><section className="pin-panel owner-pin-panel"><BrandMark inverse /><div className="lock-icon"><ShieldCheck size={25} /></div><p className="eyebrow">Owner access</p><h1>Open your dashboard</h1><p>Verify the owner phone number for {tenantName}.</p><form className="auth-form owner-auth-form" onSubmit={requestCode}><label htmlFor="owner-phone">Mobile number</label><input id="owner-phone" className="phone-input" value={phone} type="tel" inputMode="tel" onChange={(event) => setPhone(formatPhoneInput(event.target.value))} autoFocus />{error && <p className="pin-error">{error}</p>}<button className="primary-button" disabled={busy}>{busy ? 'Sending...' : 'Send secure code'}</button></form></section></main>
+  if (view === 'phone') return <main className="owner-lock"><section className="pin-panel owner-pin-panel"><BrandMark inverse /><div className="lock-icon"><ShieldCheck size={25} /></div><p className="eyebrow">Owner access</p><h1>Open your dashboard</h1><p>Enter the owner phone number for {tenantName}.</p><form className="auth-form owner-auth-form" onSubmit={requestCode}><label htmlFor="owner-phone">Mobile number</label><input id="owner-phone" className="phone-input" value={phone} type="tel" inputMode="tel" onChange={(event) => setPhone(formatPhoneInput(event.target.value))} autoFocus />{error && <p className="pin-error">{error}</p>}<button className="primary-button" disabled={busy}>{busy ? 'Opening...' : 'Continue'}</button></form></section></main>
   if (view === 'otp') return <main className="owner-lock"><section className="pin-panel owner-pin-panel"><BrandMark inverse /><p className="eyebrow">Check your phone</p><h1>Enter the six-digit code</h1><div className="pin-row owner-production-otp">{otp.map((digit, index) => <input key={index} id={`owner-otp-${index}`} value={digit} inputMode="numeric" maxLength={1} aria-label={`Owner OTP digit ${index + 1}`} onChange={(event) => updateOtp(index, event.target.value)} autoFocus={index === 0} />)}</div>{error && <p className="pin-error">{error}</p>}<button className="primary-button" disabled={busy || otp.some((digit) => !digit)} onClick={() => void verifyCode()}>{busy ? 'Checking...' : 'Verify owner access'}</button></section></main>
   if (!data) return null
 

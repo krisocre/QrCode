@@ -86,6 +86,13 @@ test('compiled production assets exclude demo screens and credentials', () => {
   }
 })
 
+test('Vercel routes SPA deep links to the Vite entrypoint', () => {
+  const vercel = JSON.parse(readFileSync(join(process.cwd(), 'vercel.json'), 'utf8')) as {
+    rewrites?: Array<{ source?: string; destination?: string }>
+  }
+  expect(vercel.rewrites).toContainEqual({ source: '/(.*)', destination: '/index.html' })
+})
+
 test('production customer entrypoint is wallet-first and contains no demo credentials', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await mockPublicConfiguration(page)

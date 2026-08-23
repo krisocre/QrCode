@@ -11,6 +11,7 @@ Do not publish the wall QR code until every item below is complete:
 - [ ] Staging and production use separate Supabase projects or, at minimum, separate tenants and credentials.
 - [ ] All database migrations pass on a clean staging database in their documented order.
 - [ ] Customer phone OTP, staff authentication, tenant isolation, and admin authorization have passed integration tests.
+- [ ] `ALLOW_UNVERIFIED_PHONE_LOGIN` is absent or `false`.
 - [ ] A real Android phone can add, restore, display, scan, update, and redeem a test Wallet pass.
 - [ ] Duplicate scans, repeated API requests, and repeated redemption attempts do not create duplicate ledger entries.
 - [ ] Offline behavior matches [the offline policy](./offline-policy.md).
@@ -68,10 +69,17 @@ Use [.env.example](../.env.example) as the variable contract. For local developm
 | `GOOGLE_WALLET_ISSUER_ID` | Numeric issuer ID from Google Pay & Wallet Console |
 | `GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL` | Service-account email granted issuer access |
 | `GOOGLE_WALLET_PRIVATE_KEY` | PEM key; Vercel may store it multiline or with escaped `\n` characters |
+| `ALLOW_UNVERIFIED_PHONE_LOGIN` | Temporary setup-pilot switch only; set `true` only while intentionally allowing number-only sign-in |
 
 The Google Wallet class suffix and allowed origins have safe defaults derived from the issuer and `APP_URL`; set their optional variables only when the deployment needs an override. Google save/delete callbacks are deliberately not accepted because they require Google Tink message verification and are not needed for pass issuance or balance updates.
 
 Twilio credentials live in Supabase Auth provider settings. The application applies database-backed request throttling by phone hash and IP hash before asking Supabase Auth to send an OTP.
+
+### Temporary number-only setup mode
+
+To proceed before Twilio is configured, keep Supabase Phone Auth enabled, set `ALLOW_UNVERIFIED_PHONE_LOGIN=true` in the Vercel environment, and redeploy. The same phone number screen remains in place, but the application creates or reuses a Supabase user and opens a normal session without sending SMS. The phone/IP throttle still limits sign-in attempts to three per hour.
+
+This is deliberately not ownership verification. Anyone who knows a member's phone number can open that member's loyalty account, and anyone who knows an owner's number can attempt to enter `/admin` as that owner. Use it only for a private setup pilot with non-sensitive test accounts, then set the variable to `false` or remove it before public use. Staff device enrollment and staff PIN checks remain enforced.
 
 Set production secrets only in Vercel's Production environment. Use separate credentials and a separate Supabase project in Preview. Development values belong in `.env.local`. After changing a Vercel environment variable, redeploy so the build and functions receive the new value.
 

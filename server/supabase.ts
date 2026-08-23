@@ -100,6 +100,25 @@ export async function authRequest<T>(path: string, body: Record<string, unknown>
   return payload as T
 }
 
+export async function authAdminRequest<T>(path: string, options: { method?: 'POST' | 'PUT'; body: Record<string, unknown> }): Promise<T> {
+  const key = config.supabaseSecretKey
+  const response = await upstreamFetch(`${config.supabaseUrl}/auth/v1/admin/${path}`, {
+    method: options.method ?? 'POST',
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(options.body),
+  }, { code: 'authentication_unavailable', message: 'Phone authentication is temporarily unavailable.' })
+  const payload = await decode(response)
+  if (!response.ok) {
+    const status = response.status === 400 || response.status === 422 ? 400 : 502
+    throw new ApiError(status, 'authentication_failed', providerMessage(payload, 'Authentication failed.'))
+  }
+  return payload as T
+}
+
 export async function getSupabaseUser(accessToken: string): Promise<SupabaseUser> {
   const response = await upstreamFetch(`${config.supabaseUrl}/auth/v1/user`, {
     headers: { apikey: config.supabasePublishableKey, Authorization: `Bearer ${accessToken}` },
