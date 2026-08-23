@@ -5,10 +5,6 @@
   "trailingSlash": false,
   "crons": [
     {
-      "path": "/api/wallet/sync",
-      "schedule": "* * * * *"
-    },
-    {
       "path": "/api/maintenance",
       "schedule": "17 4 * * *"
     }

@@ -24,7 +24,7 @@ Use this checklist with the detailed [production runbook](./production-runbook.m
 - [ ] Apply pending database migrations in filename order and stop on any error.
 - [ ] Run post-migration RLS, RPC, and tenant-isolation smoke tests.
 - [ ] Deploy the exact tested Git commit to Vercel Production.
-- [ ] Verify the Cron Jobs page lists Wallet sync every minute and maintenance daily at 04:17 UTC; inspect one successful invocation of each.
+- [ ] Verify the Cron Jobs page lists daily maintenance at 04:17 UTC; inspect one successful invocation.
 - [ ] Verify `/`, `/staff`, and `/admin` deep links return the SPA.
 - [ ] Verify `GET /api/health` returns HTTP 200 with `status: ready`, and authenticated API responses use `Cache-Control: private, no-store`.
 - [ ] Verify `sw.js`, the manifest, CSP, camera permissions, and content-hashed asset caching headers.

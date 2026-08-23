@@ -40,7 +40,7 @@ Open `http://localhost:5173`. Demo credentials remain local-only and production 
 4. Sign in once with the owner's real phone, then bootstrap that Auth UUID as documented in `database/README.md`.
 5. For a real customer launch, configure Supabase Phone Auth with Twilio and set appropriate OTP and rate-limit policies. For a limited setup pilot only, set `ALLOW_UNVERIFIED_PHONE_LOGIN=true`; it intentionally skips ownership verification and must not remain enabled for public use.
 6. Create the Google Wallet issuer/service account and grant it issuer access.
-7. Deploy to Vercel Pro or Enterprise. The committed cron jobs process Wallet updates every minute and database maintenance daily.
+7. Deploy to Vercel. Hobby-compatible deployments run database maintenance daily; Wallet updates happen directly when a customer adds their pass or staff confirms a transaction.
 8. Complete every gate in `docs/launch-checklist.md` on real Android and counter devices.
 
 Use `VITE_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` for new Supabase keys. The legacy `VITE_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` names remain accepted during migration.
