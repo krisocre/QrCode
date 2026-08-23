@@ -120,7 +120,7 @@ export function CustomerApp() {
         <section className="auth-panel">
           <BrandMark />
           <div className="auth-copy">
-            <p className="eyebrow">{database.tenant.name}</p>
+            <p className="eyebrow">Luxe Hair Studio 2</p>
             <h1>Your rewards,<br />right this way.</h1>
             <p>Enter your mobile number to open your loyalty wallet.</p>
           </div>
