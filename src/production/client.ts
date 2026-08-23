@@ -1,4 +1,4 @@
-import { apiRequest, authenticatedRequest, createIdempotencyKey } from '../lib/api-client'
+import { ApiError, apiRequest, authenticatedRequest, createIdempotencyKey } from '../lib/api-client'
 import { setSupabaseSession } from '../lib/supabase'
 import type {
   CustomerProfileResponse,
@@ -145,10 +145,14 @@ function normalizeStaffCustomer(value: unknown): StaffCustomerResponse {
 
 export const productionApi = {
   async publicTenant(slug: string): Promise<PublicTenantResponse> {
-    const payload = await apiRequest<UnknownRecord>(`/api/public/tenant?slug=${encodeURIComponent(slug)}`)
-    activeTenantId = text(record(payload.tenant).id)
+    const payload = record(await apiRequest<unknown>(`/api/public/tenant?slug=${encodeURIComponent(slug)}`))
+    const tenant = record(payload.tenant)
+    if (!tenant.id) {
+      throw new ApiError(502, { error: { code: 'invalid_tenant_response', message: 'This salon membership link is unavailable.' } })
+    }
+    activeTenantId = text(tenant.id)
     return {
-      tenant: normalizeTenant(payload.tenant),
+      tenant: normalizeTenant(tenant),
       rewards: Array.isArray(payload.rewards) ? payload.rewards.map(normalizeReward) : [],
     }
   },

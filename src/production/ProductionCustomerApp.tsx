@@ -232,9 +232,14 @@ export function ProductionCustomerApp() {
     setBusy(false)
   }
 
+  async function returnToLogin() {
+    try { await clearSupabaseSession() } catch { /* A broken or expired local session should not block recovery. */ }
+    window.location.assign('/')
+  }
+
   if (view === 'booting') return <main className="auth-shell"><div className="loading-line" aria-label="Loading membership" /></main>
 
-  if (view === 'unavailable') return <main className="auth-shell"><section className="auth-panel configuration-panel"><BrandMark /><ShieldCheck size={30} /><p className="eyebrow">Membership unavailable</p><h1>Setup is not complete.</h1><p>{configurationIssues.length ? `Missing ${configurationIssues.join(', ')}.` : error}</p><p className="privacy-note">No customer information has been submitted.</p></section></main>
+  if (view === 'unavailable') return <main className="auth-shell"><section className="auth-panel configuration-panel"><BrandMark /><ShieldCheck size={30} /><p className="eyebrow">Membership unavailable</p><h1>Setup is not complete.</h1><p>{configurationIssues.length ? `Missing ${configurationIssues.join(', ')}.` : error}</p><button className="primary-button" type="button" onClick={() => void returnToLogin()}><ArrowLeft size={19} /> Back to login</button><p className="privacy-note">No customer information has been submitted.</p></section></main>
 
   const tenant = account?.tenant ?? publicData?.tenant
   if (!tenant) return null

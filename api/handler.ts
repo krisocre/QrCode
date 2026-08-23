@@ -60,6 +60,9 @@ const routes: Record<string, ApiHandler> = {
 }
 
 function requestPath(request: ApiRequest): string {
+  const routed = request.query.route
+  if (typeof routed === 'string' && routed) return routed.replace(/^\/+|\/+$/g, '')
+  if (Array.isArray(routed) && routed[0]) return routed[0].replace(/^\/+|\/+$/g, '')
   const url = (request as ApiRequest & { url?: string }).url ?? '/api'
   const pathname = new URL(url, 'https://luxe-loyalty.local').pathname
   return pathname.replace(/^\/api\/?/, '').replace(/\/+$/, '')
